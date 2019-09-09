@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Fri Sep  6 15:50:50 2019
-
-@author: connorblack
-"""
+#For final turn in only turn in portion that you run for not the machine learning portion,
+#read in file and use that k that we found to be best to find our nearest neighbor
 import random
 import math
 #import matplotlib.pyplot as plt
@@ -12,6 +9,25 @@ import math
 #from matplotlib.ticker import AutoMinorLocator
 
 my_data = []
+def find_closest(page, compared_value1, compared_value2, k):
+    nearest_neighbor = []
+    nearest_species = []
+    
+    for line in page:
+        fields = line.strip().split()
+        distance = math.sqrt((float(compared_value1) - float(fields[0]))**2 + (float(compared_value2) - float(fields[1]))**2)
+        
+        if len(nearest_neighbor) < k:
+            nearest_neighbor.append(distance)
+            nearest_species.append(fields[2])
+                    
+        elif len(nearest_neighbor) == k:
+            if max(nearest_neighbor) > distance:
+                index_replace = nearest_neighbor.index(max(nearest_neighbor))
+                nearest_neighbor[index_replace] = distance
+                nearest_species[index_replace] = fields[2]
+    
+    return nearest_species
 
 #Read in data, take out the 300, and randomly shuffle the data for the files
 def parse_file(input_file):
@@ -104,28 +120,12 @@ def get_accuracy(folds, k_min, k_max, train_file, test_file):
             for line in Val:
                 
                 #Set all initial values
-                nearest_neighbor = []
-                nearest_classification = []
                 fields = line.strip().split()
                 Actual_Val = fields[2]
                 Zero_Count = 0
                 One_Count = 0
                 
-                #Compare the validation values against the training values
-                for each_line in Train:
-                
-                    fields2 = each_line.strip().split()
-                    distance = math.sqrt((float(fields[0]) - float(fields2[0]))**2 + (float(fields[1]) - float(fields2[1]))**2)
-                
-                    if len(nearest_neighbor) < k:
-                        nearest_neighbor.append(distance)
-                        nearest_classification.append(fields2[2])
-                    
-                    elif len(nearest_neighbor) == k:
-                        if max(nearest_neighbor) > distance:
-                            index_replace = nearest_neighbor.index(max(nearest_neighbor))
-                            nearest_neighbor[index_replace] = distance
-                            nearest_classification[index_replace] = fields2[2]
+                nearest_classification = find_closest(Train, fields[0], fields[1], k)
                 Train.seek(0)
                 
                 #Count number of 0's and 1's
@@ -158,25 +158,8 @@ def get_accuracy(folds, k_min, k_max, train_file, test_file):
 
 #Finding the type of the point given 
 def find_type(body_length, dorsal_fin, k):
-    nearest_neighbor = []
-    nearest_classification = []
-    
-    for item in my_data:
-        #print(item)
-        fields = item.strip().split()
-        distance = math.sqrt((float(body_length) - float(fields[0]))**2 + (float(dorsal_fin) - float(fields[1]))**2)
-        
-        if len(nearest_neighbor) < k:
-            nearest_neighbor.append(distance)
-            nearest_classification.append(fields[2])
-                    
-        elif len(nearest_neighbor) == k:
-            if max(nearest_neighbor) > distance:
-                index_replace = nearest_neighbor.index(max(nearest_neighbor))
-                nearest_neighbor[index_replace] = distance
-                nearest_classification[index_replace] = fields[2]
-    
-    #print(nearest_classification)            
+    #Finds the nearest classification and returns a guess     
+    nearest_classification = find_closest(my_data, body_length, dorsal_fin, k)
     Zero_Count = nearest_classification.count('0')
     One_Count = nearest_classification.count('1')
     d = {'0' : Zero_Count, '1' : One_Count}
