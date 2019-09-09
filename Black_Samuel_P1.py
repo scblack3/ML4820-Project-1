@@ -17,7 +17,7 @@ my_data = []
 def parse_file(input_file):
     
     #Opens file and and strips total data points from it
-    input_file = open("FF14.txt", "r")
+    input_file = open(input_file, "r")
     total_number = 0
     folds = 5
     i = 0
@@ -81,27 +81,37 @@ def parse_file(input_file):
 #Compares for nearest neighbor and calculates accuracy based on k-values
 def get_accuracy(folds, k_min, k_max, train_file, test_file):
     k_accuracy = {}
+    #For each k value between and including k_min and k_max
     for k in range(k_min, k_max + 1,2):
         accuracy = 0
         TP = 0
         TN = 0
         FP = 0
         FN = 0
+        #For the number of folds defined
         for i in range(folds):
+            #If its a training file
             if train_file == 'Train':
                 Train = open(train_file + "%s.txt" %(i+1), 'r')
                 Val = open(test_file + '%s.txt' %(i+1), 'r')
+                
+            #Else its the actual file being run
             else:
                 Train = open(train_file + ".txt" ,'r')
                 Val = open(test_file + '.txt', 'r')
+                
+            #For each line in the validation file
             for line in Val:
-            
+                
+                #Set all initial values
                 nearest_neighbor = []
                 nearest_classification = []
                 fields = line.strip().split()
                 Actual_Val = fields[2]
                 Zero_Count = 0
                 One_Count = 0
+                
+                #Compare the validation values against the training values
                 for each_line in Train:
                 
                     fields2 = each_line.strip().split()
@@ -117,12 +127,12 @@ def get_accuracy(folds, k_min, k_max, train_file, test_file):
                             nearest_neighbor[index_replace] = distance
                             nearest_classification[index_replace] = fields2[2]
                 Train.seek(0)
-            
+                
+                #Count number of 0's and 1's
                 Zero_Count = nearest_classification.count('0')
                 One_Count = nearest_classification.count('1')
                 d = {'0' : Zero_Count, '1' : One_Count}
                 Guess = max(d, key=d.get)
-            
             
                 #TP
                 if (int(Guess) == 1) & (int(Actual_Val) == 1):
@@ -136,27 +146,23 @@ def get_accuracy(folds, k_min, k_max, train_file, test_file):
                 #FN
                 elif (int(Guess) == 0) & (int(Actual_Val) == 1):
                     FN +=1 
-                
-        #print('TP: ' + str(TP) + ' TN: ' + str(TN) + ' FP: ' + str(FP) + ' FN: ' + str(FN))
+        #Calculate accuracy       
         accuracy = (TP + TN) / (TP + TN + FP + FN)
-        #print('Accuracy: ' + str(accuracy))
         k_accuracy[k] = accuracy
-
-    #print(k_accuracy)
-
+        
+    #Find the optimal k value
     optimal_k = max(k_accuracy, key=k_accuracy.get)
-    #optimal_k = k_accuracy.get(optimal_k)
-    #print(optimal_k)
     
     #Return the best k value and the accuracy with it
     return optimal_k, k_accuracy[optimal_k]
 
+#Finding the type of the point given 
 def find_type(body_length, dorsal_fin, k):
     nearest_neighbor = []
     nearest_classification = []
     
     for item in my_data:
-        print(item)
+        #print(item)
         fields = item.strip().split()
         distance = math.sqrt((float(body_length) - float(fields[0]))**2 + (float(dorsal_fin) - float(fields[1]))**2)
         
@@ -170,32 +176,31 @@ def find_type(body_length, dorsal_fin, k):
                 nearest_neighbor[index_replace] = distance
                 nearest_classification[index_replace] = fields[2]
     
-    print(nearest_classification)            
+    #print(nearest_classification)            
     Zero_Count = nearest_classification.count('0')
     One_Count = nearest_classification.count('1')
     d = {'0' : Zero_Count, '1' : One_Count}
     Guess = max(d, key=d.get)           
-    print(Guess)
+    return Guess
+
 
 def main():
     input_file = input("Please enter the name of the training data file: ")
     parse_file(input_file)
     best_k, accuracy = get_accuracy(5, 1, 21, 'Train', 'Val')
     final_accuracy, accuracy1 = get_accuracy(1, best_k, best_k, 'TrainingSet', 'TestSet')
-    #print(final_accuracy.get(best_k))
+ 
     print('At k = ' + str(best_k) + ' our accuracy on our test set is ' + str(accuracy1) + '%.' )
     
     body_length = 1.0
     dorsal_fin = 1.0
-    while (float(body_length) != 0) & (float(dorsal_fin) != 0):
+    while (float(body_length) != 0) | (float(dorsal_fin) != 0):
         body_length, dorsal_fin = input('Enter a body length followed by a dorsal fin length: ').split()
-        #print(body_length)
-        #print(dorsal_fin)
-        find_type(body_length, dorsal_fin, best_k)
-#TrainingSet.close()
-#TestSet.close()
-
-#input_file.close
+        if (float(body_length) == 0) & (float(dorsal_fin) == 0):
+            break
+        answer = find_type(body_length, dorsal_fin, best_k)
+        print('Based on the data entered your fish spieces is TigerFish' + str(answer))
+        
 
 if __name__ == "__main__":
     main()
