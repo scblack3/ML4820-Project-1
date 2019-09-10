@@ -29,6 +29,19 @@ def find_closest(page, compared_value1, compared_value2, k):
     
     return nearest_species
 
+def read_file(input_file):
+    #Opens file and and strips total data points from it
+    input_file = open(input_file, "r")
+    i = 0
+    for line in input_file:
+        if i == 0:
+            i += 1
+        elif i > 0:
+            my_line = line.strip()    
+            my_data.append(my_line)
+    
+    random.shuffle(my_data)
+
 #Read in data, take out the 300, and randomly shuffle the data for the files
 def parse_file(input_file):
     
@@ -172,7 +185,8 @@ def main():
     parse_file(input_file)
     best_k, accuracy = get_accuracy(5, 1, 21, 'Train', 'Val')
     final_accuracy, accuracy1 = get_accuracy(1, best_k, best_k, 'TrainingSet', 'TestSet')
- 
+    #best_k = 7
+    #read_file(input_file)
     print('At k = ' + str(best_k) + ' our accuracy on our test set is ' + str(accuracy1) + '%.' )
     
     body_length = 1.0
